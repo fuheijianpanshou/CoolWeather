@@ -48,6 +48,10 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView comfortText;
     private TextView carWashText;
     private TextView sportText;
+    private TextView travalText;
+    private TextView drsgText;
+    private TextView fluText;
+    private TextView uvText;
     private ImageView bingPicImg;
     public SwipeRefreshLayout swipeRefresh;
     public DrawerLayout drawerLayout;
@@ -73,6 +77,10 @@ public class WeatherActivity extends AppCompatActivity {
         comfortText=(TextView)findViewById(R.id.comfort_text);
         carWashText=(TextView)findViewById(R.id.car_wash_text);
         sportText=(TextView)findViewById(R.id.sport_text);
+        travalText=(TextView)findViewById(R.id.traval_text);
+        fluText=(TextView)findViewById( R.id.flu_text);
+        uvText=(TextView)findViewById(R.id.uv_text);
+        drsgText=(TextView)findViewById(R.id.drsg_text);
         swipeRefresh=(SwipeRefreshLayout)findViewById(R.id.swip_refresh);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
         navButton=(Button)findViewById(R.id.nav_button);
@@ -178,12 +186,20 @@ public class WeatherActivity extends AppCompatActivity {
             aqiText.setText(weather.aqi.city.aqi);
             pm25Text.setText(weather.aqi.city.pm25);
         }
-        String comfort="舒适度："+weather.suggestion.comfort.info;
-        String carWash="洗车指数："+weather.suggestion.carWash.info;
-        String sport="运动建议："+weather.suggestion.sport.info;
+        String comfort="舒适度："+ weather.suggestion.comfort.br+" "+weather.suggestion.comfort.info;
+        String carWash="洗车指数："+weather.suggestion.carWash.br+" "+weather.suggestion.carWash.info;
+        String sport="运动建议："+weather.suggestion.sport.br+" "+weather.suggestion.sport.info;
+        String flu="感冒指数："+weather.suggestion.flu.br+" "+weather.suggestion.flu.info;
+        String drsg="穿衣指数："+weather.suggestion.drsg.br+" "+weather.suggestion.drsg.info;
+        String traval="旅游指数："+weather.suggestion.traval.br+" "+weather.suggestion.traval.info;
+        String uv="紫外线指数："+weather.suggestion.uv.br+ " "+weather.suggestion.uv.info;
         comfortText.setText(comfort);
         carWashText.setText(carWash);
         sportText.setText(sport);
+        fluText.setText(flu);
+        drsgText.setText(drsg);
+        travalText.setText(traval);
+        uvText.setText(uv);
         weatherLayout.setVisibility(View.VISIBLE);
     }
     private void loadBingPic(){
