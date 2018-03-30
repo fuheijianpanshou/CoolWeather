@@ -1,5 +1,7 @@
 package thefirstchange.example.com.coolweather;
 
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -48,14 +50,14 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView comfortText;
     private TextView carWashText;
     private TextView sportText;
-    private TextView travalText;
-    private TextView drsgText;
-    private TextView fluText;
-    private TextView uvText;
+    private TextView qltyText;
     private ImageView bingPicImg;
     public SwipeRefreshLayout swipeRefresh;
     public DrawerLayout drawerLayout;
     private Button navButton;
+    private Button detailsButton;
+    public String[] windstr;
+    private DetailsFragment detailsFragment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,13 +79,11 @@ public class WeatherActivity extends AppCompatActivity {
         comfortText=(TextView)findViewById(R.id.comfort_text);
         carWashText=(TextView)findViewById(R.id.car_wash_text);
         sportText=(TextView)findViewById(R.id.sport_text);
-        travalText=(TextView)findViewById(R.id.traval_text);
-        fluText=(TextView)findViewById( R.id.flu_text);
-        uvText=(TextView)findViewById(R.id.uv_text);
-        drsgText=(TextView)findViewById(R.id.drsg_text);
         swipeRefresh=(SwipeRefreshLayout)findViewById(R.id.swip_refresh);
         drawerLayout=(DrawerLayout)findViewById(R.id.drawer_layout);
         navButton=(Button)findViewById(R.id.nav_button);
+        qltyText=(TextView)findViewById(R.id.qlty_text);
+        detailsButton=(Button)findViewById(R.id.detail_button);
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
@@ -115,6 +115,21 @@ public class WeatherActivity extends AppCompatActivity {
                 drawerLayout.openDrawer(GravityCompat.START);
             }
         });
+        detailsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle data=new Bundle();
+                data.putStringArray("wind",windstr);
+                detailsFragment=new DetailsFragment();
+                detailsFragment.setArguments(data);
+                FragmentManager fragmentManager=getFragmentManager();
+                FragmentTransaction fragmentTransaction=fragmentManager.beginTransaction();
+                fragmentTransaction.setCustomAnimations(R.animator.slide_right_in,R.animator.slide_left_out);
+                fragmentTransaction.replace(R.id.drawer_layout,detailsFragment);
+                fragmentTransaction.addToBackStack(null);
+                fragmentTransaction.commit();
+            }
+        });
     }
     public void requestWeather(final String weatherId){
         String weatherUrl="http://guolin.tech/api/weather?cityid="+weatherId+"&key=ce5ecffc32674148a71e138341d05e0e";
@@ -137,23 +152,25 @@ public class WeatherActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
 
                 final String responseText=response.body().string();
-                final Weather weather=Utility.handleWeatherResponse(responseText);
+                final Weather pubWeather=Utility.handleWeatherResponse(responseText);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(weather!=null&&"ok".equals(weather.status)){
+                        if(pubWeather!=null&&"ok".equals(pubWeather.status)){
                             SharedPreferences.Editor editor=PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather",responseText);
                             editor.apply();
-                            showWeatherInfo(weather);
+
+                            showWeatherInfo(pubWeather);
                         }else {
-                            if(weather==null)
+                            if(pubWeather==null)
                             Log.d("WeatherActivity","OnResponseElse.........");
                             Toast.makeText(WeatherActivity.this,"获取天气失败",Toast.LENGTH_SHORT).show();
                         }
                         swipeRefresh.setRefreshing(false);
                     }
                 });
+
             }
         });
         loadBingPic();
@@ -161,6 +178,15 @@ public class WeatherActivity extends AppCompatActivity {
     private void showWeatherInfo(Weather weather){
         Intent intent=new Intent(this, AutoUpdateService.class);
         startService(intent);
+
+        String windSpdText=weather.now.spd;
+        String windScText=weather.now.sc;
+        String windDegText=weather.now.deg;
+        String windDIrText=weather.now.dir;
+        String presText=weather.now.pres;
+        String visText=weather.now.vis;
+        String[] windstr1=new String[]{windSpdText,windScText,windDegText,windDIrText,presText,visText};
+        windstr=windstr1;
         String cityName=weather.basic.cityName;
         String updateTime=weather.basic.update.updateTime.split(" ")[1];
         String degree=weather.now.temperature+"℃";
@@ -185,21 +211,15 @@ public class WeatherActivity extends AppCompatActivity {
         if (weather.aqi!=null){
             aqiText.setText(weather.aqi.city.aqi);
             pm25Text.setText(weather.aqi.city.pm25);
+            qltyText.setText(weather.aqi.city.qlty);
+
         }
-        String comfort="舒适度："+ weather.suggestion.comfort.br+" "+weather.suggestion.comfort.info;
+        String comfort="舒适度："+weather.suggestion.comfort.br+" "+weather.suggestion.comfort.info;
         String carWash="洗车指数："+weather.suggestion.carWash.br+" "+weather.suggestion.carWash.info;
         String sport="运动建议："+weather.suggestion.sport.br+" "+weather.suggestion.sport.info;
-        String flu="感冒指数："+weather.suggestion.flu.br+" "+weather.suggestion.flu.info;
-        String drsg="穿衣指数："+weather.suggestion.drsg.br+" "+weather.suggestion.drsg.info;
-        String traval="旅游指数："+weather.suggestion.traval.br+" "+weather.suggestion.traval.info;
-        String uv="紫外线指数："+weather.suggestion.uv.br+ " "+weather.suggestion.uv.info;
         comfortText.setText(comfort);
         carWashText.setText(carWash);
         sportText.setText(sport);
-        fluText.setText(flu);
-        drsgText.setText(drsg);
-        travalText.setText(traval);
-        uvText.setText(uv);
         weatherLayout.setVisibility(View.VISIBLE);
     }
     private void loadBingPic(){
